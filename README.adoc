@@ -50,17 +50,21 @@ and utility tests:
 
 ----
 ./ant modbuild
-java -cp lib/ant-launcher.jar org.apache.tools.ant.launch.Launcher -buildfile modbuild.xml -Dlib.dir=lib mod.catalog.test mod.convert-to-xsd.test mod.dtdinst.test mod.infer.test mod.nvdl.test mod.pattern.test mod.picl.test mod.regex.test mod.rng-jaxp.test mod.rng-schema.test mod.rng-validate.test mod.util.test mod.xsd-datatype.test
+java -cp lib/ant.jar:lib/ant-launcher.jar org.apache.tools.ant.Main -buildfile modbuild.xml -Dlib.dir=lib mod.catalog.test mod.convert-to-xsd.test mod.dtdinst.test mod.infer.test mod.nvdl.test mod.pattern.test mod.picl.test mod.regex.test mod.rng-jaxp.test mod.rng-schema.test mod.rng-validate.test mod.util.test mod.xsd-datatype.test
 ----
 
 For the pattern validator unit tests alone, use:
 
 ----
-java -cp lib/ant-launcher.jar org.apache.tools.ant.launch.Launcher -buildfile modbuild.xml -Dlib.dir=lib mod.pattern.test-unit
+java -cp lib/ant.jar:lib/ant-launcher.jar org.apache.tools.ant.Main -buildfile modbuild.xml -Dlib.dir=lib mod.pattern.test-unit
 ----
 
 These are also the commands run by GitHub Actions, on pinned Java 8 and
-Java 17 releases. The broader `modbuild.xml` target `test` additionally
+Java 17 releases. On Windows, separate classpath entries with `;` instead
+of `:`. Ant starts with only its own JARs; the XSLT tasks load their declared
+Saxon dependencies. This keeps the bundled Saxon 9 XPath service registration,
+which Java 17 rejects, out of Ant's startup provider discovery.
+The broader `modbuild.xml` target `test` additionally
 runs Schematron tests. Those currently fail with bundled Saxon 9.3
 (`Unknown XPath version 0`), and JDK 17's JAXP implementation also rejects
 reflective access from the legacy Schematron adapter. GitHub Actions covers

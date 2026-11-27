@@ -74,7 +74,6 @@ class Release():
             os.path.join('lib', 'ant.jar'),
             os.path.join('lib', 'ant-launcher.jar'),
             os.path.join('lib', 'javacc.jar'),
-            os.path.join('lib', 'saxon9.jar'),
             os.path.join('lib', 'maven-ant-tasks-2.1.3.jar'),
         ])
 
