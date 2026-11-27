@@ -2,8 +2,6 @@
 <classpath>
 	<classpathentry kind="lib" path="lib/ant-googlecode.jar"/>
 	<classpathentry kind="lib" path="lib/ant-launcher.jar"/>
-	<classpathentry kind="lib" path="lib/ant-nodeps.jar"/>
-	<classpathentry kind="lib" path="lib/ant-trax.jar"/>
 	<classpathentry kind="lib" path="lib/ant.jar"/>
 	<classpathentry kind="lib" path="lib/doccheck.jar"/>
 	<classpathentry kind="lib" path="lib/isorelax.jar"/>

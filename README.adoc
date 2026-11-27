@@ -50,17 +50,23 @@ and utility tests:
 
 ----
 ./ant modbuild
-java -cp lib/ant-launcher.jar org.apache.tools.ant.launch.Launcher -buildfile modbuild.xml -Dlib.dir=lib mod.catalog.test mod.convert-to-xsd.test mod.dtdinst.test mod.infer.test mod.nvdl.test mod.pattern.test mod.picl.test mod.regex.test mod.rng-jaxp.test mod.rng-schema.test mod.rng-validate.test mod.util.test mod.xsd-datatype.test
+java -cp "lib/ant.jar:lib/ant-launcher.jar:$JAVA_HOME/lib/tools.jar" org.apache.tools.ant.Main -buildfile modbuild.xml -Dlib.dir=lib mod.catalog.test mod.convert-to-xsd.test mod.dtdinst.test mod.infer.test mod.nvdl.test mod.pattern.test mod.picl.test mod.regex.test mod.rng-jaxp.test mod.rng-schema.test mod.rng-validate.test mod.util.test mod.xsd-datatype.test
 ----
 
 For the pattern validator unit tests alone, use:
 
 ----
-java -cp lib/ant-launcher.jar org.apache.tools.ant.launch.Launcher -buildfile modbuild.xml -Dlib.dir=lib mod.pattern.test-unit
+java -cp "lib/ant.jar:lib/ant-launcher.jar:$JAVA_HOME/lib/tools.jar" org.apache.tools.ant.Main -buildfile modbuild.xml -Dlib.dir=lib mod.pattern.test-unit
 ----
 
 These are also the commands run by GitHub Actions, on pinned Java 8 and
-Java 17 releases. The broader `modbuild.xml` target `test` additionally
+Java 17 releases. On Windows, separate classpath entries with `;` instead
+of `:` and use `%JAVA_HOME%` instead of `$JAVA_HOME`. Ant starts with its own
+JARs and the JDK's `tools.jar`, needed for Java 8 compilation (the absent
+path is ignored on Java 9 and later); the XSLT tasks load their declared
+Saxon dependencies. This keeps the bundled Saxon 9 XPath service registration,
+which Java 17 rejects, out of Ant's startup provider discovery.
+The broader `modbuild.xml` target `test` additionally
 runs Schematron tests. Those currently fail with bundled Saxon 9.3
 (`Unknown XPath version 0`), and JDK 17's JAXP implementation also rejects
 reflective access from the legacy Schematron adapter. GitHub Actions covers
@@ -85,3 +91,72 @@ lifetime requirements.
 The implementation is in `mod/pattern/src/main/com/thaiopensource/relaxng/sax/PatternValidator.java`;
 behavioral regressions are in
 `mod/pattern/src/test/com/thaiopensource/relaxng/pattern/PatternValidatorContextTest.java`.
+
+== Reproducible Ant JARs
+
+The ordinary `./ant` build writes `build/jing.jar`, `build/trang.jar` and
+`build/dtdinst.jar` with a source-owned archive timestamp of
+`2024-12-31T00:00:00Z`. This date corresponds to the release in `version.xml`.
+The generated module build uses Ant's standard
+https://ant.apache.org/manual/Tasks/jar.html[`jar modificationtime` attribute]
+(available since Ant 1.10.2); no archive is rewritten after generation.
+The launchers set the build JVM timezone to UTC because ZIP stores local DOS
+date fields. This makes those fields independent of the host timezone.
+For direct Ant or embedded Ant invocation, set the build JVM option
+`-Duser.timezone=UTC` too.
+For a different declared artifact date, pass, for example,
+`./ant -Djar.modificationtime=2025-01-02T00:00:00Z` in a clean source export.
+Use even seconds within ZIP's supported date range, with an explicit UTC (`Z`) suffix.
+
+The bundled build tool is Apache Ant 1.10.15 (Java 8 or later), replacing
+1.7.1 because the latter cannot set archive timestamps. The tasks used by this build from the formerly separate
+`ant-nodeps` and `ant-trax` JARs are included in the new `ant.jar`.
+The two unmodified Maven Central artifacts are
+https://repo.maven.apache.org/maven2/org/apache/ant/ant/1.10.15/ant-1.10.15.jar[`org.apache.ant:ant:1.10.15`]
+and
+https://repo.maven.apache.org/maven2/org/apache/ant/ant-launcher/1.10.15/ant-launcher-1.10.15.jar[`org.apache.ant:ant-launcher:1.10.15`].
+Their SHA-256 identities are in `lib/ant.sha256`; their Apache licence and
+notice are retained in the JARs and in `lib/ant-LICENSE.txt` and
+`lib/ant-NOTICE.txt`. Jing's original `copying.txt`, `copying.html` and
+module notices remain the licence provenance for the built library.
+
+For a clean consumer build, pin the source commit (including the documentation
+gitlink), the bundled dependency bytes, the complete compiler/runtime JDK
+vendor and version, and the archive date. Set `JAVA_HOME` to that JDK, then:
+
+----
+git submodule update --init --recursive
+sha256sum --check lib/ant.sha256
+./ant
+sha256sum build/jing.jar build/trang.jar build/dtdinst.jar
+----
+
+Use UTF-8 and an English locale (`LC_ALL=C.UTF-8` and
+`JAVA_TOOL_OPTIONS='-Dfile.encoding=UTF-8 -Duser.language=en -Duser.country=US'`)
+for the declared reproducibility toolchain. Start from a clean export with no
+previous generated targets or build outputs. The normal build regenerates
+`modbuild.xml` from `build.xsl`. Source mtimes and build timezones may differ.
+Compared with Ant 1.7.1, the new tool records its actual `Ant-Version` in
+the manifest and omits the final newline in generated service descriptors;
+the ordered provider names and library class bytes are preserved.
+Byte identity is scoped to identical declared inputs; different JDK compilers
+can produce different class bytes and manifest `Created-By` values, and Ant
+versions can change manifest metadata or archive serialization. This does
+not promise identical output between Java 8 and Java 17 compilers. Both
+remain supported, with Java 8 classfile targets.
+
+After committing, the behavioral regression check is:
+
+----
+python3 test/reproducible-jars.py --output /tmp/jing-reproducibility
+----
+
+Use a fresh output directory outside the checkout. The check exports the
+committed source and pinned documentation three times and runs the normal
+build, with different source mtimes and timezones. It reads every entry,
+checks Java 8 classfile versions, compares raw JAR bytes, and proves that a
+changed archive date changes the hash while preserving every entry's contents.
+Its `report.json` records source, documentation, archive and entry identities;
+all build logs and untouched JARs remain in that directory. GitHub Actions
+runs this check on each of its existing pinned Java 8 and Java 17 jobs,
+alongside the native tests described above.

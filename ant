@@ -8,8 +8,9 @@ EOF
 }
 JING_TRANG_HOME=`dirname $0`
 "$JAVA_HOME/bin/java" \
+  -Duser.timezone=UTC \
   "-Dant.home=$JING_TRANG_HOME" \
-  -cp "$JING_TRANG_HOME/lib/ant-launcher.jar" \
-  org.apache.tools.ant.launch.Launcher \
+  -cp "$JING_TRANG_HOME/lib/ant.jar:$JING_TRANG_HOME/lib/ant-launcher.jar:$JAVA_HOME/lib/tools.jar" \
+  org.apache.tools.ant.Main \
   -buildfile "$JING_TRANG_HOME/build.xml" \
   "$@"

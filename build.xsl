@@ -13,6 +13,8 @@
     <property name="build.dir" value="${{basedir}}/build"/>
     <property name="doc.dir" value="${{basedir}}/doc"/>
     <property name="javacc.dir" value="${{lib.dir}}"/>
+    <!-- The launcher fixes the JVM timezone to UTC for stable ZIP date fields. -->
+    <property name="jar.modificationtime" value="2024-12-31T00:00:00Z"/>
     <property name="ant.build.javac.source" value="8"/>
     <property name="ant.build.javac.target" value="1.8"/>
     <taskdef name="testng" classname="org.testng.TestNGAntTask">
@@ -172,7 +174,8 @@
     </xsl:if>
   </target>
   <target name="mod.{$name}.jar" depends="mod.{$name}.compile-main">
-    <jar jarfile="{$build}/{$name}.jar" duplicate="fail">
+    <jar jarfile="{$build}/{$name}.jar" duplicate="fail"
+         modificationtime="${{jar.modificationtime}}">
       <xsl:apply-templates select="jar/*" mode="jar">
 	<xsl:with-param name="root" select="$root"/>
       </xsl:apply-templates>
