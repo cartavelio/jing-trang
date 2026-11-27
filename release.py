@@ -73,6 +73,7 @@ class Release():
             os.path.join('build', 'jing.jar'),
             os.path.join('lib', 'ant.jar'),
             os.path.join('lib', 'ant-launcher.jar'),
+            os.path.join(os.environ['JAVA_HOME'], 'lib', 'tools.jar'),
             os.path.join('lib', 'javacc.jar'),
             os.path.join('lib', 'maven-ant-tasks-2.1.3.jar'),
         ])

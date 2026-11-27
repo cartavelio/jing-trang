@@ -7,4 +7,4 @@ exit /b 1
 rem %~dp0 gives the directory including the trailing slash
 rem we need the directory without the trailing slash, so add the dot
 set JING_TRANG_HOME=%~dp0.
-"%JAVA_HOME%\bin\java.exe" -Duser.timezone=UTC -classpath "%JING_TRANG_HOME%\lib\ant.jar;%JING_TRANG_HOME%\lib\ant-launcher.jar" "-Dant.home=%JING_TRANG_HOME%" org.apache.tools.ant.Main -buildfile "%JING_TRANG_HOME%\build.xml" %*
+"%JAVA_HOME%\bin\java.exe" -Duser.timezone=UTC -classpath "%JING_TRANG_HOME%\lib\ant.jar;%JING_TRANG_HOME%\lib\ant-launcher.jar;%JAVA_HOME%\lib\tools.jar" "-Dant.home=%JING_TRANG_HOME%" org.apache.tools.ant.Main -buildfile "%JING_TRANG_HOME%\build.xml" %*

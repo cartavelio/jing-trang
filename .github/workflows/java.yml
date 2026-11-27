@@ -32,10 +32,10 @@ jobs:
           sha256sum --check lib/ant.sha256
           ./ant modbuild
       - name: Pattern unit regressions
-        run: java -cp lib/ant.jar:lib/ant-launcher.jar org.apache.tools.ant.Main -buildfile modbuild.xml -Dlib.dir=lib mod.pattern.test-unit
+        run: java -cp "lib/ant.jar:lib/ant-launcher.jar:$JAVA_HOME/lib/tools.jar" org.apache.tools.ant.Main -buildfile modbuild.xml -Dlib.dir=lib mod.pattern.test-unit
       - name: Complete RNG and Trang native suites
         run: >-
-          java -cp lib/ant.jar:lib/ant-launcher.jar org.apache.tools.ant.Main
+          java -cp "lib/ant.jar:lib/ant-launcher.jar:$JAVA_HOME/lib/tools.jar" org.apache.tools.ant.Main
           -buildfile modbuild.xml -Dlib.dir=lib
           mod.catalog.test mod.convert-to-xsd.test mod.dtdinst.test mod.infer.test
           mod.nvdl.test mod.pattern.test mod.picl.test mod.regex.test
