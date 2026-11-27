@@ -29,6 +29,7 @@ jobs:
         run: |
           curl --fail --location --retry 2 --max-time 120 https://repo.maven.apache.org/maven2/saxon/saxon/6.5.3/saxon-6.5.3.jar -o lib/saxon.jar
           echo '51e47d7d6021939947d9965b9618b9b1fa07506623facf005ded06ca1178fd2a  lib/saxon.jar' | sha256sum --check
+          sha256sum --check lib/ant.sha256
           ./ant modbuild
       - name: Pattern unit regressions
         run: java -cp lib/ant-launcher.jar org.apache.tools.ant.launch.Launcher -buildfile modbuild.xml -Dlib.dir=lib mod.pattern.test-unit
@@ -40,3 +41,5 @@ jobs:
           mod.nvdl.test mod.pattern.test mod.picl.test mod.regex.test
           mod.rng-jaxp.test mod.rng-schema.test mod.rng-validate.test
           mod.util.test mod.xsd-datatype.test
+      - name: Reproducible normal JAR builds and changed-date control
+        run: python3 test/reproducible-jars.py --output "$RUNNER_TEMP/jing-reproducibility"
