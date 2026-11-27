@@ -31,6 +31,63 @@ After cloning the repository, here's how to build.
    That runs the version of `ant` included in the repository. When the
    `ant` script completes, you should find `jing.jar` and `trang.jar` files
    in the `build` subdirectory.
-   You can also tell the `ant` script to build the `test` target, which
-   will build the jars and then run some tests. On Linux, use the command
-   `./ant test`. On Windows, use `.\ant test`.
+
+== Testing
+
+The native build generates module targets in `modbuild.xml` (the root build
+has no `test` target). The legacy test splitter needs Saxon 6.5.3, which is
+not bundled. Fetch the public test dependency and verify its checksum:
+
+----
+curl --fail --location --retry 2 --max-time 120 https://repo.maven.apache.org/maven2/saxon/saxon/6.5.3/saxon-6.5.3.jar -o lib/saxon.jar
+echo '51e47d7d6021939947d9965b9618b9b1fa07506623facf005ded06ca1178fd2a  lib/saxon.jar' | sha256sum --check
+----
+
+Generate the targets, then run the complete RNG, datatype, pattern, and
+Trang suites, with the catalog, DTD, inference, NVDL, PICL, regex, JAXP,
+and utility tests:
+
+----
+./ant modbuild
+java -cp lib/ant-launcher.jar org.apache.tools.ant.launch.Launcher -buildfile modbuild.xml -Dlib.dir=lib mod.catalog.test mod.convert-to-xsd.test mod.dtdinst.test mod.infer.test mod.nvdl.test mod.pattern.test mod.picl.test mod.regex.test mod.rng-jaxp.test mod.rng-schema.test mod.rng-validate.test mod.util.test mod.xsd-datatype.test
+----
+
+For the pattern validator unit tests alone, use:
+
+----
+java -cp lib/ant-launcher.jar org.apache.tools.ant.launch.Launcher -buildfile modbuild.xml -Dlib.dir=lib mod.pattern.test-unit
+----
+
+These are also the commands run by GitHub Actions, on pinned Java 8 and
+Java 17 releases. The broader `modbuild.xml` target `test` additionally
+runs Schematron tests. Those currently fail with bundled Saxon 9.3
+(`Unknown XPath version 0`), and JDK 17's JAXP implementation also rejects
+reflective access from the legacy Schematron adapter. GitHub Actions covers
+the suites listed above; it does not claim a passing Schematron suite.
+The documentation submodule is pinned by its gitlink;
+initialize it with `git submodule update --init --recursive` if needed.
+TestNG XML reports are under `build/mod/*/test-*/report/`; other native
+test drivers write logs under their module's `build/mod/*/test-*` directory.
+The build retains its Java 8 source and bytecode targets. On newer JDKs,
+the existing bootstrap-class-path warnings are expected.
+There is no configured source formatter or lint task; check patch whitespace
+with `git diff --check`.
+
+== Optional validation context
+
+An error handler may implement
+`com.thaiopensource.relaxng.sax.ElementContextHandler` to observe the
+element currently being checked by `PatternValidator`. The start callback
+runs after buffered preceding text is checked, including text flushed by
+prefix mappings, and before the new element's name and attributes are checked.
+The end callback runs after text and end-tag checks, so errors from those
+checks still have the element's context. Context resets at `startDocument`
+and when the validator is reset for reuse. Ordinary SAX `ErrorHandler`
+implementations continue to receive the same ordered diagnostics.
+
+The implementation is in `mod/pattern/src/main/com/thaiopensource/relaxng/sax/PatternValidator.java`;
+behavioral regressions are in
+`mod/pattern/src/test/com/thaiopensource/relaxng/pattern/PatternValidatorContextTest.java`.
+The callback supplies SAX names and attributes; consumers own any structural
+location formatting. As with SAX callbacks, copy attributes if they must be
+retained beyond the callback.
