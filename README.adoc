@@ -3,14 +3,15 @@
 :artifactId: jing
 :repository: jing-trang
 
-image:https://travis-ci.org/relaxng/{repository}.svg?branch=master["Build Status", link="https://travis-ci.org/relaxng/{repository}"]
+image:https://github.com/cartavelio/{repository}/actions/workflows/java.yml/badge.svg["Build Status", link="https://github.com/cartavelio/{repository}/actions/workflows/java.yml"]
 image:https://maven-badges.herokuapp.com/maven-central/{groupId}/{artifactId}/badge.svg["Artifact on Maven Central", link="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22{groupId}%22%20a%3A%22{artifactId}%22"]
 image:http://www.javadoc.io/badge/{groupId}/{artifactId}.svg["Javadocs", link="http://www.javadoc.io/doc/{groupId}/{artifactId}"]
 
 After cloning the repository, here's how to build.
 
 . Ensure you have git and JDK 8 or above installed.
-   All other dependencies are included in the repository.
+   Build dependencies are included in the repository; the additional test
+   dependency is described under <<Testing>>.
 
 . Set the `JAVA_HOME` environment variable to point to the directory
    where the JDK is installed. For example:
@@ -21,7 +22,7 @@ After cloning the repository, here's how to build.
 
 . Clone the repository
 
-    git clone https://github.com/relaxng/jing-trang.git`
+    git clone https://github.com/cartavelio/jing-trang.git
 
 . Change your working directory to be the `jing-trang` directory (that is,
    the directory containing this file).
@@ -76,18 +77,11 @@ with `git diff --check`.
 == Optional validation context
 
 An error handler may implement
-`com.thaiopensource.relaxng.sax.ElementContextHandler` to observe the
-element currently being checked by `PatternValidator`. The start callback
-runs after buffered preceding text is checked, including text flushed by
-prefix mappings, and before the new element's name and attributes are checked.
-The end callback runs after text and end-tag checks, so errors from those
-checks still have the element's context. Context resets at `startDocument`
-and when the validator is reset for reuse. Ordinary SAX `ErrorHandler`
-implementations continue to receive the same ordered diagnostics.
+link:mod/pattern/src/main/com/thaiopensource/relaxng/sax/ElementContextHandler.java[`com.thaiopensource.relaxng.sax.ElementContextHandler`]
+to observe the element currently being checked by `PatternValidator`.
+The interface Javadoc defines callback ordering, context resets, and attribute
+lifetime requirements.
 
 The implementation is in `mod/pattern/src/main/com/thaiopensource/relaxng/sax/PatternValidator.java`;
 behavioral regressions are in
 `mod/pattern/src/test/com/thaiopensource/relaxng/pattern/PatternValidatorContextTest.java`.
-The callback supplies SAX names and attributes; consumers own any structural
-location formatting. As with SAX callbacks, copy attributes if they must be
-retained beyond the callback.
