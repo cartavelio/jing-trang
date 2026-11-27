@@ -16,6 +16,7 @@ import org.xml.sax.SAXParseException;
 public class PatternValidator extends Context implements ContentHandler, DTDHandler {
   private Matcher matcher;
   private final ErrorHandler eh;
+  private final ElementContextHandler contextHandler;
   private boolean bufferingCharacters = false;
   private final StringBuilder charBuf = new StringBuilder();
   private Locator locator = null;
@@ -29,6 +30,8 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
       check(matcher.matchTextBeforeStartTag(charBuf.toString(), this));
     }
     Name name = new Name(namespaceURI, localName);
+    if (contextHandler != null)
+      contextHandler.startElement(namespaceURI, localName, qName, atts);
     check(matcher.matchStartTagOpen(name, qName, this));
     int len = atts.getLength();
     for (int i = 0; i < len; i++) {
@@ -54,6 +57,8 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
                                             qName, this));
     }
     check(matcher.matchEndTag(new Name(namespaceURI, localName), qName, this));
+    if (contextHandler != null)
+      contextHandler.endElement(namespaceURI, localName, qName);
   }
 
   public void characters(char ch[], int start, int length) throws SAXException {
@@ -84,6 +89,8 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
   }
 
   public void startDocument() throws SAXException {
+    if (contextHandler != null)
+      contextHandler.reset();
     check(matcher.matchStartDocument());
   }
 
@@ -102,9 +109,12 @@ public class PatternValidator extends Context implements ContentHandler, DTDHand
   public PatternValidator(Pattern pattern, ValidatorPatternBuilder builder, ErrorHandler eh) {
     this.matcher = new PatternMatcher(pattern, builder);
     this.eh = eh;
+    this.contextHandler = eh instanceof ElementContextHandler ? (ElementContextHandler)eh : null;
   }
 
   public void reset() {
+    if (contextHandler != null)
+      contextHandler.reset();
     super.reset();
     bufferingCharacters = false;
     locator = null;

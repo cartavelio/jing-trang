@@ -4,4 +4,5 @@ build/
 doc/
 modbuild.xml
 modules.xml
+lib/saxon.jar
 *.iml

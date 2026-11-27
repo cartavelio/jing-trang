@@ -336,13 +336,12 @@
       <xslt style="{$srctestdir}/{@transform}"
 	    in="{$srctest}"
 	    out="{$runtestdir}/{@name}test.xml">
-	<factory name="net.sf.saxon.TransformerFactoryImpl">
-    <classpath>
-      <fileset dir="lib">
-        <filename name="saxon9.jar"/>
-      </fileset>
-    </classpath>
-  </factory>
+        <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+        <classpath>
+          <fileset dir="lib">
+            <filename name="saxon9.jar"/>
+          </fileset>
+        </classpath>
       </xslt>
       <!-- XXX Could validate intermediate result against a schema -->
     </xsl:if>
@@ -358,10 +357,11 @@
 	  </xsl:otherwise>
 	</xsl:choose>
       </xsl:attribute>
-      <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+      <!-- The split stylesheets use Saxon 6 output and directory extensions. -->
+      <factory name="com.icl.saxon.TransformerFactoryImpl"/>
       <classpath>
         <fileset dir="lib">
-          <filename name="saxon9.jar"/>
+          <filename name="saxon.jar"/>
         </fileset>
       </classpath>
       <param name="dir" expression="{$runtestdir}"/>
